@@ -1,0 +1,410 @@
+//////////////////////////////////////////////////////////////////////////////////
+/*
+* Author : Aditya Kulkarni
+* UFID : 8961-9482
+* Description: This Program is for DuckduckGo Search engine,
+* where 𝑛 most popular keywords are at any given time is calculated.
+*/
+
+#include <iostream>
+#include<sstream>
+#include <string.h>
+#include <fstream>
+#include <map>
+#include <limits.h>
+#include<vector>
+#include<map>
+using namespace std;
+
+class Fib
+{
+public:
+	int m_iDegree, m_iData;
+	Fib * m_pChild;
+	Fib * m_pLeftsib;
+	Fib* m_pRightsib;
+	Fib * m_pParent;
+	bool m_bChildcut;
+
+	Fib(int a_idata)
+	{
+		m_iDegree = 0;
+		m_iData = a_idata;
+		m_pChild = NULL;
+		m_pLeftsib = this;
+		m_pRightsib = this;
+		m_pParent = NULL;
+		m_bChildcut = false;
+	}
+};
+class Fibops
+{
+	Fib *m_pMax;
+public:
+	Fibops()
+	{
+		m_pMax = NULL;
+	}
+	void IncreaseKey(Fib *key,int a_iVal)
+	{
+		Fib* k;
+
+		key->m_iData += a_iVal;
+		if (NULL == key->m_pParent)
+		{
+			if (m_pMax->m_iData < key->m_iData)
+			{
+				m_pMax = key;
+			}
+			return;
+		}
+		if (key->m_pParent->m_iData < key->m_iData)
+		{ 
+			do
+			{
+				if (key->m_pRightsib == key)
+				{
+					key->m_pParent->m_pChild = NULL;
+				}
+				else
+				{
+					key->m_pParent->m_pChild = key->m_pRightsib;
+					key->m_pLeftsib->m_pRightsib = key->m_pRightsib;
+					key->m_pRightsib->m_pLeftsib = key->m_pLeftsib;
+				}
+				key->m_pParent->m_bChildcut = true;
+				key->m_pParent->m_iDegree -= 1;
+				m_pMax->m_pRightsib->m_pLeftsib = key;
+				key->m_pRightsib = m_pMax->m_pRightsib;
+				m_pMax->m_pRightsib = key;
+				key->m_pLeftsib = m_pMax;
+				if (m_pMax->m_iData < key->m_iData)
+				{
+					m_pMax = key;
+				}
+				k = key->m_pParent;
+				key->m_pParent = NULL;
+				key = k;
+			} while (NULL != key->m_pParent && key->m_pParent->m_bChildcut == true);
+		}
+	}
+	Fib* Insert(int a_ival)
+	{
+		Fib *node = new Fib(a_ival);
+		/*if(a_proot->m_pLeftsib != NULL){
+		a_proot->m_pLeftsib->m_pRightsib = node;
+		node->m_pLeftsib = a_proot->m_pLeftsib;
+		node->m_pRightsib =  a_proot;
+		}else
+		{
+		a_proot->m_pLeftsib = node;
+		a_proot->m_pRightsib = node;
+		node->m_pRightsib = a_proot;
+		node->m_pLeftsib = a_proot;
+		if(a_proot->m_pRightsib == NULL)
+		{
+		a_proot->m_pRightsib = node;
+		}
+		}*/
+		if (m_pMax != NULL)
+		{
+			if (m_pMax->m_pLeftsib == m_pMax) {
+				m_pMax->m_pRightsib = node;
+				m_pMax->m_pLeftsib = node;
+				node->m_pLeftsib = m_pMax;
+				node->m_pRightsib = m_pMax;
+			}
+			else {
+				m_pMax->m_pRightsib->m_pLeftsib = node;
+				node->m_pRightsib = m_pMax->m_pRightsib;
+				m_pMax->m_pRightsib = node;
+				node->m_pLeftsib = m_pMax;
+
+			}
+
+			if (m_pMax->m_iData < a_ival) {
+				m_pMax = node;
+			}
+		}
+		else
+		{
+			m_pMax = node;
+		}
+		return node;
+	}
+	
+	void AssignChild(Fib *p, Fib *q)
+	{
+		
+		if (p->m_pChild == NULL) {
+
+			p->m_pChild = q;
+			q->m_pParent = p;
+			q->m_pLeftsib = q;
+			q->m_pRightsib = q;
+			p->m_iDegree += 1;
+		}
+		else
+		{
+			
+			q->m_pLeftsib = p->m_pChild;
+			p->m_pChild->m_pRightsib->m_pLeftsib = q;
+			q->m_pRightsib = p->m_pChild->m_pRightsib;
+			p->m_pChild->m_pRightsib = q;
+			q->m_pParent = p;
+			p->m_iDegree = p->m_iDegree + 1;
+			
+		}
+	}
+	Fib* getMax()
+	{
+		return m_pMax;
+	}
+	void PrintRecords(Fib *a_proot)
+	{
+		if (a_proot != NULL)
+		{
+			Fib *p = a_proot;
+			do
+			{
+				cout << p->m_iData << "\n";
+				if (p->m_pChild != NULL)
+				{
+					PrintRecords(p->m_pChild);
+				}
+				p = p->m_pRightsib;
+			} while (p != a_proot);
+		}
+	}
+    Fib* RemoveMax()
+	{
+		map<int, Fib*> l_pTreet;
+		map<int, Fib*>::iterator it;
+		int max = INT_MIN;
+		Fib *q, *p, *l_pMax=NULL;
+		q = m_pMax->m_pChild;
+
+		if (q != NULL)
+		{
+			do
+			{
+				q->m_pParent = NULL;
+				q = q->m_pRightsib;
+			} while (q != m_pMax->m_pChild && q != q->m_pRightsib);
+			m_pMax->m_pChild->m_pLeftsib->m_pRightsib = m_pMax->m_pRightsib;
+			m_pMax->m_pRightsib->m_pLeftsib = m_pMax->m_pChild->m_pLeftsib;
+			m_pMax->m_pChild->m_pLeftsib = m_pMax;
+			m_pMax->m_pRightsib = m_pMax->m_pChild;
+			m_pMax->m_pChild = NULL;
+			m_pMax->m_iDegree = 0;
+		}
+
+		q = m_pMax->m_pRightsib;
+		vector<Fib*> Vec;
+		map<int, Fib*>::iterator itr;
+		Vec.clear();
+		while (q != m_pMax)
+		{
+			Vec.push_back(q);
+			q = q->m_pRightsib;
+		}
+		for (int i = 0; i < Vec.size(); i++)
+		{
+			Vec[i]->m_pLeftsib = Vec[i];
+			Vec[i]->m_pRightsib = Vec[i];
+		}
+		Fib*n, *m;
+		for (int i = 0; i<Vec.size(); i++)
+		{
+			it = l_pTreet.find(Vec[i]->m_iDegree);
+
+			while (it != l_pTreet.end()) {
+				/*if (Vec[i]->m_iData > it->second->m_iData) {
+					Vec[i]->m_pLeftsib->m_pRightsib = it->second->m_pRightsib;
+					Vec[i]->m_pRightsib->m_pLeftsib = it->second->m_pLeftsib;
+					AssignChild(Vec[i], it->second);
+				}
+				else {
+					Fib* tmp = it->second;
+					AssignChild(tmp, Vec[i]);			
+					Vec[i] = tmp;
+				}*/
+				if (Vec[i]->m_iData > it->second->m_iData)
+				{
+				n = Vec[i];
+				m = it->second;
+				m->m_pLeftsib->m_pRightsib = m->m_pRightsib;
+				m->m_pRightsib->m_pLeftsib = m->m_pLeftsib;
+				if (n->m_pChild == NULL)
+				{
+
+
+					m->m_pRightsib = m;
+					m->m_pLeftsib = m;
+					n->m_pChild = m;
+					m->m_pParent = n;
+
+					n->m_iDegree = n->m_iDegree + 1;
+				}
+				else
+				{
+					m->m_pLeftsib = n->m_pChild;
+					n->m_pChild->m_pRightsib->m_pLeftsib = m;
+					m->m_pRightsib = n->m_pChild->m_pRightsib;
+					n->m_pChild->m_pRightsib = m;
+					m->m_pParent = n;
+					n->m_iDegree = n->m_iDegree + 1;
+				}
+
+
+			}
+		else {
+			m = Vec[i];
+			n = it->second;
+			if (n->m_pChild == NULL)
+			{
+
+
+				m->m_pRightsib = m;
+				m->m_pLeftsib = m;
+				n->m_pChild = m;
+				m->m_pParent = n;
+
+				n->m_iDegree += 1;
+			}
+			else
+			{
+				m->m_pLeftsib = n->m_pChild;
+				n->m_pChild->m_pRightsib->m_pLeftsib = m;
+				m->m_pRightsib = n->m_pChild->m_pRightsib;
+				n->m_pChild->m_pRightsib = m;
+				m->m_pParent = n;
+				n->m_iDegree += 1;
+			}
+			Vec[i] = n;
+		}
+				l_pTreet.erase(it);
+				it = l_pTreet.find(Vec[i]->m_iDegree);
+			}
+			if (it == l_pTreet.end())
+			{
+				
+				l_pTreet.insert({ Vec[i]->m_iDegree,Vec[i] });
+			}
+
+		}
+		itr = l_pTreet.begin();
+		itr->second->m_pRightsib = itr->second;
+		itr->second->m_pLeftsib = itr->second;
+		l_pMax = itr->second;
+		while (itr != l_pTreet.end())
+		{
+
+			l_pMax = Consolidate(l_pMax, itr->second);
+			itr++;
+		}
+		Fib* t = m_pMax;
+		m_pMax = l_pMax;
+		return t;
+	}
+	Fib* Consolidate(Fib* m, Fib* n)
+	{
+		if (m->m_pRightsib == n)
+		{
+			m->m_pLeftsib = n;
+			n->m_pLeftsib = m;
+			m->m_pRightsib = n;
+			m->m_pRightsib = m;
+		}
+		else
+		{
+			m->m_pRightsib->m_pLeftsib = n;
+			n->m_pRightsib = m->m_pRightsib;
+			m->m_pRightsib = n;
+			n->m_pLeftsib = m;
+		}
+		if (n->m_iData > m->m_iData)
+		{
+			return n;
+		}
+		return m;
+	}
+
+};
+int main()
+{
+	map<string,Fib*> words;
+	map<string, Fib*>::iterator itr;
+	map<string, Fib*> removedmax;
+	map<string, Fib*>::iterator itr1;
+	map<Fib*,string> heapmap;
+	map<Fib*,string>::iterator itr2;
+	bool l_bIsword = false;
+	Fibops *Fibop = new Fibops();
+	ofstream myfile;
+	myfile.open("C:/Users/vikramaditya/Desktop/output.txt");
+    ifstream file("C:/Users/vikramaditya/Desktop/million.txt");
+	while(file)
+	{
+	string strline,name;
+	if (!getline( file, strline )) break;
+	l_bIsword = false;
+	istringstream ss( strline );
+	while (ss)
+	{
+	string s;
+	if (!getline( ss, s, ' ' )) break;
+	if (s[0] == '$')
+	{
+		l_bIsword = true;
+		name = s;
+	}
+	else if(l_bIsword)
+	{
+		int val = stoi(s);
+		itr = words.find(name);
+		if (itr == words.end())
+		{
+			Fib* p = Fibop->Insert(val);
+			words.insert({ name,p});
+			heapmap.insert({ p,name });
+		}
+		else
+		{
+			Fibop->IncreaseKey(itr->second, val);
+		}
+	}
+	else if (s == "stop")
+	{
+		myfile.close();
+		getchar();
+		exit(1);
+	}
+	else
+	{
+		int n = stoi(s);
+		for (int i = 0; i < n; i++)
+		{
+			Fib* t = Fibop->RemoveMax();
+			itr2 = heapmap.find(t);
+			myfile << itr2->second.substr(1,itr2->second.size()-1)<<"\t";
+			removedmax.insert({itr2->second, t});
+		}
+		myfile << "\n";
+		for (itr1 = removedmax.begin(); itr1 != removedmax.end(); itr1++)
+		{
+			words.erase(itr1->first);
+			heapmap.erase(itr1->second);
+			Fib *p =Fibop->Insert(itr1->second->m_iData);
+			words.insert({itr1->first, p});
+			heapmap.insert({ p,itr1->first });
+		}
+		removedmax.empty();
+	}
+	
+	}
+	}
+	getchar();
+	return 0;
+}
+
