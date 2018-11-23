@@ -14,8 +14,3 @@ Running the code:
 
 Author:
 Aditya Kulkarni
-
-Acknowledgments:
-1.Apoorv Chandurkar
-2.Anagha Joshi 
-3.Purva Kulkarni
